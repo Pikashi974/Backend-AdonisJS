@@ -22,5 +22,15 @@ router
     router.get('/users', '#controllers/users_controller.list')
     router.patch('/profile', '#controllers/users_controller.patchProfile')
     router.patch('/profile/img', '#controllers/users_controller.changeImage')
+    router.patch('/profile/password', '#controllers/users_controller.changePassword')
   })
   .use(middleware.auth({ guards: ['api'] }))
+router
+  .group(() => {
+    router.get('/users', '#controllers/users_controller.listAdmin')
+    router.patch('/profile', '#controllers/users_controller.patchProfile')
+    router.patch('/profile/img', '#controllers/users_controller.changeImage')
+    router.patch('/profile/password', '#controllers/users_controller.changePassword')
+  })
+  .prefix('/admin')
+  .use(middleware.admin({ guards: ['api'] }))

@@ -1,12 +1,8 @@
+import { Authenticators } from '@adonisjs/auth/types'
 import type { HttpContext } from '@adonisjs/core/http'
 import type { NextFn } from '@adonisjs/core/types/http'
-import type { Authenticators } from '@adonisjs/auth/types'
 
-/**
- * Auth middleware is used authenticate HTTP requests and deny
- * access to unauthenticated users.
- */
-export default class AuthMiddleware {
+export default class IsAdminMiddleware {
   /**
    * The URL to redirect to, when authentication fails
    */
@@ -20,6 +16,15 @@ export default class AuthMiddleware {
     } = {}
   ) {
     await ctx.auth.authenticateUsing(options.guards, { loginRoute: this.redirectTo })
-    return next()
+    let isAdmin = await ctx.auth.user?.$extras.isAdmin
+    console.log(isAdmin)
+
+    if (isAdmin) {
+      return next()
+    } else {
+      return ctx.response.unauthorized({
+        message: 'You are not authorized to perform this action',
+      })
+    }
   }
 }
