@@ -17,7 +17,6 @@ export default class IsAdminMiddleware {
   ) {
     await ctx.auth.authenticateUsing(options.guards, { loginRoute: this.redirectTo })
     let isAdmin = await ctx.auth.user?.$extras.isAdmin
-    console.log(isAdmin)
 
     if (isAdmin) {
       return next()

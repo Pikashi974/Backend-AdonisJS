@@ -52,6 +52,24 @@ export default class UsersController {
     const { password, enabled, isAdmin, ...userInfo } = user.$attributes
     return response.ok(userInfo)
   }
+  async patchProfileUser({ params, request, response }: HttpContext) {
+    const user = await User.findByOrFail('id', params.id)
+    const { fullname, email, area, tel, job } = request.all()
+    if (!fullname && !email && !area && !tel && !job) {
+      return response.badRequest({ message: 'All fields are required' })
+    }
+    await user
+      .merge({
+        fullname: fullname ? fullname : user.fullname,
+        email: email ? email : user.email,
+        area: area ? area : user.area,
+        tel: tel ? tel : user.tel,
+        job: job ? job : user.job,
+      })
+      .save()
+    const { password, enabled, isAdmin, ...userInfo } = user.$attributes
+    return response.ok(userInfo)
+  }
   async changeImage({ auth, request, response }: HttpContext) {
     const user = await auth.authenticate()
 
@@ -77,6 +95,32 @@ export default class UsersController {
     const { password, enabled, isAdmin, ...userInfo } = user.$attributes
     return response.ok(userInfo)
   }
+  async changeImageUser({ params, request, response }: HttpContext) {
+    const user = await User.findByOrFail('id', params.id)
+
+    const img = request.file('img', {
+      extnames: ['jpg', 'png', 'jpeg'],
+      size: '4mb',
+    })
+
+    //Check if the image is valid
+    if (!img || !img.isValid) {
+      return response.badRequest({ message: 'Invalid image' })
+    }
+
+    const filename = `${cuid()}.${img.extname}`
+    await img.move('public/uploads', { name: filename })
+    unlinkSync(`public/uploads/${user.img}`)
+
+    await user
+      .merge({
+        img: filename ? filename : user.img,
+      })
+      .save()
+    const { password, enabled, isAdmin, ...userInfo } = user.$attributes
+    return response.ok(userInfo)
+  }
+
   async changePassword({ auth, request, response }: HttpContext) {
     const user = await auth.authenticate()
     const newPassword = request.input('password')
@@ -91,6 +135,41 @@ export default class UsersController {
       })
       .save()
     const { password, enabled, isAdmin, ...userInfo } = user.$attributes
+    return response.ok(userInfo)
+  }
+  async changePasswordUser({ params, request, response }: HttpContext) {
+    const user = await User.findByOrFail('id', params.id)
+    const newPassword = request.input('password')
+    const isPasswordValid = await hash.verify(user.password, newPassword)
+    // Check si le mot de passe est juste le même
+    if (isPasswordValid) {
+      return response.badRequest({ message: 'Invalid password' })
+    }
+    await user
+      .merge({
+        password: newPassword,
+      })
+      .save()
+    const { password, enabled, isAdmin, ...userInfo } = user.$attributes
+    return response.ok(userInfo)
+  }
+  async deleteUser({ params, response }: HttpContext) {
+    const user = await User.findByOrFail('id', params.id)
+    await user.delete()
+    return response.ok({ message: 'User successfully deleted' })
+  }
+  async enableUser({ params, request, response }: HttpContext) {
+    const user = await User.findByOrFail('id', params.id)
+    const enabledVariable = request.input('enabled')
+
+    if ([0, 1].includes(enabledVariable) && enabledVariable !== user.enabled) {
+      await user
+        .merge({
+          enabled: !user.enabled,
+        })
+        .save()
+    }
+    const { password, isAdmin, ...userInfo } = user.$attributes
     return response.ok(userInfo)
   }
 }
