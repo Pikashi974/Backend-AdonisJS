@@ -28,6 +28,12 @@ export default class UsersController {
     })
     return userResponse
   }
+  async getUser({ params, response }: HttpContext) {
+    const user = await User.findByOrFail('id', params.id)
+    const { password, isAdmin, ...userInfo } = user.$attributes
+    return response.ok(userInfo)
+  }
+
   async patchProfile({ auth, request, response }: HttpContext) {
     const user = await auth.authenticate()
     const { fullname, email, area, tel, job } = request.all()

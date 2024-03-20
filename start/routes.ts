@@ -28,6 +28,7 @@ router
 router
   .group(() => {
     router.get('/users', '#controllers/users_controller.listAdmin')
+    router.get('/user/:id', '#controllers/users_controller.getUser')
     router.patch('/profile', '#controllers/users_controller.patchProfile')
     router.patch('/profile/img', '#controllers/users_controller.changeImage')
     router.patch('/profile/password', '#controllers/users_controller.changePassword')
