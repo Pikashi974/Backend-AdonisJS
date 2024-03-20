@@ -82,9 +82,13 @@ export default class AuthController {
       if (!isPasswordValid) {
         return response.badRequest({ message: 'Invalid password' })
       }
+      if (!user.enabled) {
+        return response.unauthorized({ error: 'Your account is not verified' })
+      }
 
       const token = await User.accessTokens.create(user)
-      return response.ok({ message: 'Logged in', token: token })
+
+      return response.ok({ message: 'Logged in', token: token.toJSON().token })
     } catch (error) {
       console.log(error)
       return response.internalServerError({ message: 'An error occured during login' })
